@@ -9,7 +9,7 @@
  *
  * cdav uses Sabre/dav library http://sabre.io/dav/
  * Sabre/dav is distributed under use the three-clause BSD-license
- * 
+ *
  * Author : Befox SARL http://www.befox.fr/
  *
  ******************************************************************/
@@ -18,7 +18,7 @@
  *   	\file       cdav/cdavurls.php
  *		\ingroup    cdav
  *		\brief      This page displays urls for carddav and caldav sync
- *	
+ *
  */
 
 // Change this following line to use the correct relative path (../, ../../, etc)
@@ -26,10 +26,12 @@ if(is_file('../main.inc.php'))
 	$dir = '../';
 elseif(is_file('../../../main.inc.php'))
 	$dir = '../../../';
-else 
+else
 	$dir = '../../';
-	
+
 require $dir.'main.inc.php';	// Load $user and permissions
+
+define ('CDAV_URI_KEY', $conf->global->CDAV_URI_KEY);
 
 
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
@@ -71,7 +73,7 @@ if($type=='CardDAV')
 	echo dol_buildpath('cdav/server.php', 2)."\n";
 	echo dol_buildpath('cdav', 2)."/server.php/principals/".$user->login."/";
 	echo '</PRE>';
-	
+
 	echo '<h3>'.$langs->trans('URLforCardDAV', 2).'</h3>';
 	echo '<PRE>'.dol_buildpath('cdav/server.php', 2).'/addressbooks/'.$user->login.'/default/</PRE>';
 }
@@ -83,9 +85,9 @@ elseif($type=='CalDAV')
 	echo dol_buildpath('cdav/server.php', 2)."\n";
 	echo dol_buildpath('cdav', 2)."/server.php/principals/".$user->login."/";
 	echo '</PRE>';
-	
+
 	echo '<h3>'.$langs->trans('URLforCalDAV').'</h3>';
-	
+
 	if(isset($user->rights->agenda->allactions->read) && $user->rights->agenda->allactions->read)
 	{
 		if (versioncompare(versiondolibarrarray(), array(3,7,9))>0)
@@ -117,7 +119,7 @@ elseif($type=='ICS')
 {
 
 	echo '<h3>'.$langs->trans('URLforICS').'</h3>';
-	
+
 	if(isset($user->rights->agenda->allactions->read) && $user->rights->agenda->allactions->read)
 	{
 		if (versioncompare(versiondolibarrarray(), array(3,7,9))>0)
@@ -132,16 +134,16 @@ elseif($type=='ICS')
 		while($row = $db->fetch_array($result))
 		{
 			echo '<h4>'.$row['firstname'].' '.$row['lastname'].' :</h4>';
-			
-			echo "<PRE>".$langs->trans('Full')." :\n".dol_buildpath('cdav/ics.php', 2).'?token='.base64url_encode(mcrypt_encrypt (MCRYPT_BLOWFISH, CDAV_URI_KEY, $row['rowid'].'+ø+full', ecb))."\n\n";
-			echo $langs->trans('NoLabel')." :\n".dol_buildpath('cdav/ics.php', 2).'?token='.base64url_encode(mcrypt_encrypt (MCRYPT_BLOWFISH, CDAV_URI_KEY, $row['rowid'].'+ø+nolabel', ecb)).'</PRE><br/>';
-			
+
+			echo "<PRE>".$langs->trans('Full')." :\n".dol_buildpath('cdav/ics.php', 2).'?token='.base64url_encode(mcrypt_encrypt (MCRYPT_BLOWFISH, CDAV_URI_KEY, $row['rowid'].'+ø+full', 'ecb'))."\n\n";
+			echo $langs->trans('NoLabel')." :\n".dol_buildpath('cdav/ics.php', 2).'?token='.base64url_encode(mcrypt_encrypt (MCRYPT_BLOWFISH, CDAV_URI_KEY, $row['rowid'].'+ø+nolabel', 'ecb')).'</PRE><br/>';
+
 		}
 	}
 	else
 	{
-		echo "<PRE>".$langs->trans('Full')." :\n".dol_buildpath('cdav/ics.php', 2).'?token='.base64url_encode(mcrypt_encrypt (MCRYPT_BLOWFISH, CDAV_URI_KEY, $user->id.'+ø+full', ecb))."\n\n";
-		echo $langs->trans('NoLabel')." :\n".dol_buildpath('cdav/ics.php', 2).'?token='.base64url_encode(mcrypt_encrypt (MCRYPT_BLOWFISH, CDAV_URI_KEY, $user->id.'+ø+nolabel', ecb)).'</PRE><br/>';
+		echo "<PRE>".$langs->trans('Full')." :\n".dol_buildpath('cdav/ics.php', 2).'?token='.base64url_encode(mcrypt_encrypt (MCRYPT_BLOWFISH, CDAV_URI_KEY, $user->id.'+ø+full', 'ecb'))."\n\n";
+		echo $langs->trans('NoLabel')." :\n".dol_buildpath('cdav/ics.php', 2).'?token='.base64url_encode(mcrypt_encrypt (MCRYPT_BLOWFISH, CDAV_URI_KEY, $user->id.'+ø+nolabel', 'ecb')).'</PRE><br/>';
 	}
 
 }

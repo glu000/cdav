@@ -31,6 +31,11 @@ class CdavLib
 	 */
 	public function getSqlCalEvents($calid, $oid=false, $ouri=false)
 	{
+		global $conf;
+
+		define ('CDAV_SYNC_PAST', $conf->global->CDAV_SYNC_PAST);
+		define ('CDAV_SYNC_FUTURE', $conf->global->CDAV_SYNC_FUTURE);
+
 		// TODO : replace GROUP_CONCAT by
 		$sql = 'SELECT
 					"ev" elem_source,
@@ -336,7 +341,7 @@ class CdavLib
 
 	public function getFullCalendarObjects($calendarId, $bCalendarData)
 	{
-		debug_log("getCalendarObjects( $calendarId , $bCalendarData )");
+		//debug_log("getCalendarObjects( $calendarId , $bCalendarData )");
 
 		$calid = ($calendarId*1);
 		$calevents = [] ;
@@ -349,8 +354,8 @@ class CdavLib
 			return $calevents;
 
 		$rSql['ev'] = $this->getSqlCalEvents($calid);
-		$rSql['pe'] = $this->getSqlProjectTasks($calid, false, 'pe');
-		$rSql['pt'] = $this->getSqlProjectTasks($calid, false, 'pt');
+		//$rSql['pe'] = $this->getSqlProjectTasks($calid, false, 'pe');
+		//$rSql['pt'] = $this->getSqlProjectTasks($calid, false, 'pt');
 
 		foreach($rSql as $elem_source => $sql)
 		{
