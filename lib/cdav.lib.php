@@ -297,7 +297,7 @@ class CdavLib
 			$caldata.=strtr($obj->note, array("\n"=>"\\n", "\r"=>""))."\\n";
 
 
-			$caldata.="\\nLink zur Maßnahme: ".DOL_MAIN_URL_ROOT."/comm/action/card.php?id=".$obj->id;
+			$caldata.="\\nLink zum Ereignis: ".DOL_MAIN_URL_ROOT."/comm/action/card.php?id=".$obj->id;
 
 			if(!empty($obj->soc_nom))
 				$caldata.="\\nVerknüpftes Unternehmen: ".$obj->soc_nom;
