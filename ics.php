@@ -42,8 +42,10 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 // Load traductions files requiredby by page
 $langs->load("cdav");
 
+define ('CDAV_URI_KEY', $conf->global->CDAV_URI_KEY);
+
 //parse Token
-$arrTmp = explode('+ø+', mcrypt_decrypt(MCRYPT_BLOWFISH, 'CDAV_URI_KEY', base64url_decode(GETPOST('token')), 'ecb'));
+$arrTmp = explode('+ø+', mcrypt_decrypt(MCRYPT_BLOWFISH, CDAV_URI_KEY, base64url_decode(GETPOST('token')), 'ecb'));
 
 if (! isset($arrTmp[1]) || ! in_array(trim($arrTmp[1]), array('nolabel', 'full')))
 {
