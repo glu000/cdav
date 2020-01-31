@@ -10,14 +10,14 @@
  *
  * cdav uses Sabre/dav library http://sabre.io/dav/
  * Sabre/dav is distributed under use the three-clause BSD-license
- * 
+ *
  * Author : Befox SARL http://www.befox.fr/
  * Author : Evert Pot (http://evertpot.com/)
  * copyright Copyright (C) 2007-2015 fruux GmbH (https://fruux.com/)
  * copyright Copyright (C) 2015 Befox SARL http://www.befox.fr/
  *
  ******************************************************************/
- 
+
 namespace Sabre\CalDAV\Backend;
 
 use Sabre\VObject;
@@ -57,10 +57,10 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 	 * @var langs
 	 */
 	protected $langs;
-	
+
 	/**
 	 * Library Class for reading Dolibarr events
-	 * 
+	 *
 	 * @var cdavLib
 	 * */
 	private $cdavLib;
@@ -113,7 +113,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 		$this->langs->load("companies");
 		$this->langs->load("agenda");
 		$this->langs->load("commercial");
-		
+
 	}
 
 	/**
@@ -143,24 +143,24 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 	function getCalendarsForUser($principalUri) {
 
 		global $conf;
-		
+
 		debug_log("getCalendarsForUser( $principalUri )");
-		
+
 		$calendars = [];
-		
+
 		if(! $this->user->rights->agenda->myactions->read)
 			return $calendars;
-		
+
 		if(!isset($this->user->rights->agenda->allactions->read) || !$this->user->rights->agenda->allactions->read)
 			$onlyme = true;
 		else
 			$onlyme = false;
-					
+
 		$components = [ 'VTODO', 'VEVENT' ];
 
 		$sql = 'SELECT
 					u.rowid, u.login, u.firstname, u.lastname, u.color,
-					(SELECT MAX(a.tms) 
+					(SELECT MAX(a.tms)
 						FROM '.MAIN_DB_PREFIX.'actioncomm as a, '.MAIN_DB_PREFIX.'actioncomm_resources as ar
 						WHERE ar.fk_actioncomm = a.id AND ar.element_type="user"
 						AND a.entity IN ('.getEntity('societe', 1).')
@@ -168,7 +168,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 						AND ar.fk_element = u.rowid) as lastupd_ev, ';
 		if($conf->projet->enabled && !$conf->global->PROJECT_HIDE_TASKS && intval(CDAV_TASK_SYNC)>0)
 		{
-			$sql.='(SELECT MAX(pt.tms) 
+			$sql.='(SELECT MAX(pt.tms)
 						FROM '.MAIN_DB_PREFIX.'projet_task AS pt
 						LEFT JOIN '.MAIN_DB_PREFIX.'element_contact as ec ON (ec.element_id=pt.rowid)
 						LEFT JOIN '.MAIN_DB_PREFIX.'c_type_contact as tc ON (tc.rowid=ec.fk_c_type_contact AND tc.element="project_task" AND tc.source="internal")
@@ -182,7 +182,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'user u WHERE u.statut>0';
 		if($onlyme)
 			$sql .= ' AND u.rowid='.$this->user->id;
-		
+
 		$result = $this->db->query($sql);
 		while($row = $this->db->fetch_array($result))
 		{
@@ -200,7 +200,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 				'{urn:ietf:params:xml:ns:caldav}calendar-description'                => trim($row['firstname'].' '.$row['lastname']),
 				'{urn:ietf:params:xml:ns:caldav}calendar-timezone'                   => date_default_timezone_get(),
 				'{http://apple.com/ns/ical/}calendar-order'                          => $row['rowid']==$this->user->id?0:$row['rowid'],
-				'{http://apple.com/ns/ical/}calendar-color'                          => ($row['color']=='')?'':('#'.$row['color']),
+				'{http://apple.com/ns/ical/}calendar-color'                          => ($row['color']=='#FF0000')?'':('#'.$row['color']),
 
 				// try unorthodox method :
 				'{http://calendarserver.org/ns/}subscribed-strip-todos'              => false,
@@ -248,11 +248,11 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 	 * @return void
 	 */
 	function updateCalendar($calendarId, \Sabre\DAV\PropPatch $propPatch) {
-		
+
 		debug_log("updateCalendar( $calendarId )");
-		
-		
-		
+
+
+
 		// not supported
 		return;
 	}
@@ -264,13 +264,13 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 	 * @return void
 	 */
 	function deleteCalendar($calendarId) {
-		
+
 		debug_log("deleteCalendar( $calendarId )");
 
 		// not supported
 		return;
 	}
-	
+
 	/**
 	 * Returns all calendar objects within a calendar.
 	 *
@@ -305,7 +305,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 	function getCalendarObjects($calendarId) {
 
 		debug_log("getCalendarObjects( $calendarId )");
-		
+
 		return $this->cdavLib->getFullCalendarObjects($calendarId, false);
 	}
 
@@ -346,12 +346,12 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 		}
 		else
 			$oid = 0;
-			
+
 		$calevent = null ;
 
 		if(! $this->user->rights->agenda->myactions->read)
 			return $calevent;
-		
+
 		if($calid!=$this->user->id && (!isset($this->user->rights->agenda->allactions->read) || !$this->user->rights->agenda->allactions->read))
 			return $calevent;
 
@@ -361,13 +361,13 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 			$sql = $this->cdavLib->getSqlProjectTasks($calid, $oid, $elem_source);
 
 		$result = $this->db->query($sql);
-		
+
 		if ($result)
 		{
 			if ($obj = $this->db->fetch_object($result))
 			{
 				$calendardata = $this->cdavLib->toVCalendar($calid, $obj);
-				
+
 				$calevent = [
 					'id' => $obj->id,
 					'uri' => $obj->id.'-'.$elem_source.'-'.CDAV_URI_KEY,
@@ -380,9 +380,9 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 				];
 			}
 		}
-		
+
 		debug_log("getCalendarObject return: \n".print_r($calevent,true));
-		
+
 		return $calevent;
 	}
 
@@ -401,16 +401,16 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 	function getMultipleCalendarObjects($calendarId, array $uris) {
 
 		debug_log("getMultipleCalendarObjects( $calendarId , ".count($uris)." uris )");
-	
+
 		$calevents = [];
-		
+
 		foreach($uris as $uri)
 		{
 			$calevent = $this->getCalendarObject($calendarId, $uri);
 			if($calevent != null)
 				$calevents[] = $calevent;
 		}
-		
+
 		return $calevents;
 	}
 
@@ -435,9 +435,9 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 	 */
 	function createCalendarObject($calendarId, $objectUri, $calendarData) {
 
-		
+
 		debug_log("createCalendarObject( $calendarId , $objectUri )");
-		
+
 		//Check right on $calendarId for current user
 		if ( ! in_array($calendarId, $this->_getCalendarsIdForUser()))
 		{
@@ -446,12 +446,12 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 		}
 		$origCalendarData = $calendarData;
 		$calendarData = $this->_parseData($calendarData);
-		
+
 		if (! $calendarData || empty($calendarData))
 		{
 			return;
 		}
-		
+
 		$oid = false;
 		$elem_source = 'ev';
 		// check if it is existing event (if caldav client move it from a calendar to an other)
@@ -483,7 +483,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 			if ($result!==false && ($row=$this->db->fetch_object($result))!==false)
 				$oid = intval($row->fk_object);
 		}
-			
+
 		if(!$oid)	// new event
 		{
 			debug_log("    creating event");
@@ -515,8 +515,8 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 				debug_log("    Error inserting : ".$sql);
 				return;
 			}
-			
-			//Récupérer l'ID de l'event créer et faire une insertion dans actioncomm_resources 
+
+			//Récupérer l'ID de l'event créer et faire une insertion dans actioncomm_resources
 			$oid = $this->db->last_insert_id(MAIN_DB_PREFIX.'actioncomm');
 			if ( ! $oid)
 			{
@@ -527,21 +527,21 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 			//Insérer l'UUID externe
 			$sql = "INSERT INTO ".MAIN_DB_PREFIX."actioncomm_cdav (`fk_object`, `uuidext`, `sourceuid`)
 					VALUES (
-						".$oid.", 
+						".$oid.",
 						'".$this->db->escape($objectUri)."',
 						'".$this->db->escape($calendarData['uid'])."'
 					)";
 			$this->db->query($sql);
 		}
-		
+
 		if($elem_source == 'ev')
 		{
 			debug_log("    add user $calendarId to event $oid");
 			$sql = "INSERT INTO ".MAIN_DB_PREFIX."actioncomm_resources (`fk_actioncomm`, `element_type`, `fk_element`, `transparency` )
 					VALUES (
-						".$oid.", 
-						'user', 
-						".(int)$calendarId.", 
+						".$oid.",
+						'user',
+						".(int)$calendarId.",
 						'".$this->db->escape($calendarData['transparency'])."'
 					)";
 			$this->db->query($sql);
@@ -560,7 +560,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 			debug_log($sql);
 			$this->db->query($sql);
 		}
-		
+
 		return;
 	}
 
@@ -585,7 +585,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 	function updateCalendarObject($calendarId, $objectUri, $calendarData) {
 
 		debug_log("updateCalendarObject( $calendarId , $objectUri )");
-		
+
 		//Check right on $calendarId for current user
 		if ( ! in_array($calendarId, $this->_getCalendarsIdForUser()))
 		{
@@ -594,17 +594,17 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 			// not authorized
 			return;
 		}
-		
+
 		$calendarData = $this->_parseData($calendarData);
-		
+
 		if (! $calendarData || empty($calendarData))
 		{
 			return;
 		}
-		
+
 		if($calendarData['elem_source']=='ev')
 		{
-			$sql = "UPDATE ".MAIN_DB_PREFIX."actioncomm 
+			$sql = "UPDATE ".MAIN_DB_PREFIX."actioncomm
 						SET
 							label 			= '".$this->db->escape($calendarData['label'])."',
 							datep			= '".($calendarData['fullday'] == 1 ? date('Y-m-d 00:00:00', $calendarData['start']) : date('Y-m-d H:i:s', $calendarData['start']))."',
@@ -622,7 +622,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 		}
 		elseif($calendarData['elem_source']=='pe')	// event
 		{
-			$sql = "UPDATE ".MAIN_DB_PREFIX."projet_task 
+			$sql = "UPDATE ".MAIN_DB_PREFIX."projet_task
 						SET
 							label 			= '".$this->db->escape($calendarData['label'])."',
 							dateo			= '".($calendarData['fullday'] == 1 ? date('Y-m-d 00:00:00', $calendarData['start']) : date('Y-m-d H:i:s', $calendarData['start']))."',
@@ -636,7 +636,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 		}
 		elseif($calendarData['elem_source']=='pt') // todo
 		{
-			$sql = "UPDATE ".MAIN_DB_PREFIX."projet_task 
+			$sql = "UPDATE ".MAIN_DB_PREFIX."projet_task
 						SET
 							label 			= '".$this->db->escape($calendarData['label'])."',
 							dateo			= '".($calendarData['fullday'] == 1 ? date('Y-m-d 00:00:00', $calendarData['start']) : date('Y-m-d H:i:s', $calendarData['start']))."',
@@ -649,7 +649,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 							tms				= NOW()
 						WHERE rowid = ".(int)$calendarData['id'];
 		}
-		
+
 		$this->db->query($sql);
 
 		return;
@@ -734,7 +734,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 			'uid'            => $uid,
 		];
 	}
-	
+
 	/**
 	 * Returns a list of calendars ID for a principal.
 	 *
@@ -743,23 +743,23 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 	function _getCalendarsIdForUser() {
 
 		debug_log("_getCalendarsIdForUser()");
-		
+
 		$calendars = [];
-		
+
 		if(! $this->user->rights->agenda->myactions->read)
 			return $calendars;
-		
+
 		if(!isset($this->user->rights->agenda->allactions->read) || !$this->user->rights->agenda->allactions->read)
 			$onlyme = true;
 		else
 			$onlyme = false;
-	   
-		$sql = 'SELECT 
+
+		$sql = 'SELECT
 					u.rowid
 				FROM '.MAIN_DB_PREFIX.'user u WHERE u.statut>0';
 		if($onlyme)
 			$sql .= ' AND u.rowid='.$this->user->id;
-		
+
 		$result = $this->db->query($sql);
 		while($row = $this->db->fetch_array($result))
 		{
@@ -818,7 +818,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 		$status = null;
 		$elem_source='ev';
 		foreach ($vObject->getComponents() as $component) {
-			if ($component->name !== 'VTIMEZONE') 
+			if ($component->name !== 'VTIMEZONE')
 			{
 				$componentType = $component->name;
 				$uid = (string)$component->UID;
@@ -849,7 +849,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 					$label 			= isset($component->SUMMARY) ? (string)$component->SUMMARY : '';
 					if(substr($label,0,1)=='[' && strpos($label, ']')!==false)
 						$label = trim(substr($label,strpos($label, ']')+1));
-					$fullday		= ! (  isset($component->DTSTART) && $component->DTSTART->hasTime() 
+					$fullday		= ! (  isset($component->DTSTART) && $component->DTSTART->hasTime()
 										|| isset($component->DTEND) && $component->DTEND->hasTime()
 										|| isset($component->DUE) && $component->DUE->hasTime());
 					if ($fullday == 1)
@@ -863,7 +863,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 						else
 							$tmp	= date('Ymd');
 						$start	= mktime(0, 0, 0, substr($tmp, 4, 2), substr($tmp, 6, 2), substr($tmp, 0, 4));
-						
+
 						if(isset($component->DTEND))
 							$tmp 	= $component->DTEND->__toString();
 						elseif(isset($component->DUE))
@@ -880,7 +880,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 							$start 	= $component->DUE->getDateTime()->getTimeStamp();
 						else
 							$start  = time();
-							
+
 						if(isset($component->DTEND))
 							$end 	= $component->DTEND->getDateTime()->getTimeStamp();
 						elseif(isset($component->DUE))
@@ -982,7 +982,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 		debug_log("   parsed data : ".print_r($ret, true));
 		return $ret;
 	}
-	
+
 	/**
 	 * Deletes an existing calendar object.
 	 *
@@ -995,7 +995,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 	function deleteCalendarObject($calendarId, $objectUri) {
 
 		debug_log("deleteCalendarObject( $calendarId , $objectUri) ");
-		
+
 		//Check right on $calendarId for current user
 		if ( ! in_array($calendarId, $this->_getCalendarsIdForUser()))
 		{
@@ -1017,16 +1017,16 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 				debug_log("    not found event $oid for".$objectUri);
 				return;
 			}
-				
+
 			debug_log("    remove user ".intval($calendarId)." from resources of event ".$oid);
-			$this->db->query("DELETE FROM ".MAIN_DB_PREFIX."actioncomm_resources 
+			$this->db->query("DELETE FROM ".MAIN_DB_PREFIX."actioncomm_resources
 							WHERE fk_actioncomm = ".$oid."
 							AND element_type = 'user'
 							AND fk_element = ".intval($calendarId));
-			
+
 			// change owner if other resource
 			$this->db->query("UPDATE ".MAIN_DB_PREFIX."actioncomm
-							SET fk_user_action=(SELECT fk_element FROM ".MAIN_DB_PREFIX."actioncomm_resources 
+							SET fk_user_action=(SELECT fk_element FROM ".MAIN_DB_PREFIX."actioncomm_resources
 								WHERE fk_actioncomm = ".$oid."
 								AND element_type = 'user'
 								AND fk_element <> ".intval($calendarId)."
@@ -1046,7 +1046,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 				return;
 			}
 			debug_log("    remove user ".intval($calendarId)." from resources of task ".$oid);
-			$this->db->query("DELETE ec 
+			$this->db->query("DELETE ec
 							FROM ".MAIN_DB_PREFIX."element_contact as ec
 							LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tc ON (tc.rowid=ec.fk_c_type_contact AND tc.element='project_task' AND tc.source='internal')
 							WHERE ec.element_id = ".$oid."
@@ -1059,9 +1059,9 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 			debug_log("    not found ".$objectUri);
 			return;
 		}
-		
-		
-		
+
+
+
 		return;
 	}
 
@@ -1157,22 +1157,22 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 	 * @return string|null
 	 */
 	function getCalendarObjectByUID($principalUri, $uid) {
-	
+
 		debug_log("getCalendarObjectByUID( $principalUri , $uid)");
 
 		if(strpos($uid, '-ev-')>0)
 		{
 			// "UID:".$obj->id.'-ev-'.CDAV_URI_KEY
-		
+
 			$oid =  $uid*1;
 			$calid = $this->user->id;
-			
+
 			/*
 			$calpos = strpos($uid, '-ev-');
 			if($calpos>0)
 				$calid = substr($uid,$calpos+1)*1;
 			*/
-			
+
 			return $calid.'-cal-'.$this->user->login . '/' . $oid.'-ev-'.CDAV_URI_KEY;
 		}
 		else
@@ -1413,7 +1413,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 	function getSchedulingObjects($principalUri) {
 
 		debug_log("getSchedulingObjects( $principalUri )");
-		
+
 		// not supported
 		return [];
 	}
@@ -1428,7 +1428,7 @@ class Dolibarr extends AbstractBackend implements SyncSupport, SubscriptionSuppo
 	function deleteSchedulingObject($principalUri, $objectUri) {
 
 		debug_log("deleteSchedulingObject( $principalUri , $objectUri )");
-		
+
 		// not supported
 		return;
 	}
